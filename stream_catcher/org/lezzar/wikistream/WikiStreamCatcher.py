@@ -6,6 +6,8 @@ import requests
 import json
 import uuid
 
+from org.lezzar.wikistream.ConfluentClient import ConfluentClient
+
 class WikiNamespace(socketIO_client.BaseNamespace):
 
     keys = {u'comment', u'wiki', u'server_script_path', u'timestamp', u'server_url',
@@ -13,7 +15,10 @@ class WikiNamespace(socketIO_client.BaseNamespace):
             u'log_id', u'patrolled', u'bot', u'log_type', u'length', u'log_action',
             u'namespace', u'type', u'minor', u'revision'}
 
-    headers = {'Content-Type': 'application/vnd.kafka.avro.v1+json'}
+
+    topic = "WikiStreamEvents"
+    confluentClient = ConfluentClient(schema_registry_urls=["http://localhost:8081"],
+                                      kafka_rest_urls=["http://localhost:8082"])
 
     @staticmethod
     def format_data(event):
@@ -21,12 +26,14 @@ class WikiNamespace(socketIO_client.BaseNamespace):
         formatted[u"event_uuid"] = str(uuid.uuid1())
         return formatted
 
+
     def on_change(self, change):
-        print(change)
-        data = json.dumps({"value_schema_id":1, "records": [{"value":WikiNamespace.format_data(change)}]})
-        response = requests.post("http://localhost:8082/topics/WikiStreamEvents", data=data, headers=WikiNamespace.headers)
+        data = WikiNamespace.format_data(change)
+        response = WikiNamespace.confluentClient.send(data=data,topic=WikiNamespace.topic)
+
         print(data)
         print(response.content)
+
 
     def on_connect(self):
         self.emit('subscribe', 'commons.wikimedia.org')
