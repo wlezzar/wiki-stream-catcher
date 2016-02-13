@@ -8,7 +8,7 @@
 # Register the WikiStreamEvent schema
 curl -X POST -i -H "Content-Type: application/vnd.schemaregistry.v1+json" \
     --data @/home/wlezzar/MyFiles/projects/wiki_stream_catcher/models/schemas/wiki_stream_event_schema.json \
-    http://localhost:8081/subjects/wiki-stream-event/versions
+    http://localhost:8081/subjects/WikiStreamEvents-value/versions
     
 # get schema
 curl -X GET http://localhost:8081/subjects/ # get schema lists
