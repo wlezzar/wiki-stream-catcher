@@ -1,0 +1,1 @@
+/opt/modules/confluent/current/bin/kafka-topics --create --topic WikiStreamEvents --config retention.ms=3600000 --partitions 5 --zookeeper localhost:2181 --replication 1

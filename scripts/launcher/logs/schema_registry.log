@@ -1,0 +1,75 @@
+SLF4J: Class path contains multiple SLF4J bindings.
+SLF4J: Found binding in [jar:file:/opt/modules/confluent/confluent-2.0.0/share/java/confluent-common/slf4j-log4j12-1.7.6.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: Found binding in [jar:file:/opt/modules/confluent/confluent-2.0.0/share/java/schema-registry/slf4j-log4j12-1.7.6.jar!/org/slf4j/impl/StaticLoggerBinder.class]
+SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
+SLF4J: Actual binding is of type [org.slf4j.impl.Log4jLoggerFactory]
+[2016-02-17 22:24:59,452] INFO SchemaRegistryConfig values: 
+	metric.reporters = []
+	kafkastore.connection.url = localhost:2181
+	avro.compatibility.level = backward
+	debug = false
+	shutdown.graceful.ms = 1000
+	response.mediatype.preferred = [application/vnd.schemaregistry.v1+json, application/vnd.schemaregistry+json, application/json]
+	kafkastore.commit.interval.ms = -1
+	response.mediatype.default = application/vnd.schemaregistry.v1+json
+	kafkastore.topic = _schemas
+	metrics.jmx.prefix = kafka.schema.registry
+	access.control.allow.origin = 
+	port = 8081
+	request.logger.name = io.confluent.rest-utils.requests
+	metrics.sample.window.ms = 30000
+	kafkastore.zk.session.timeout.ms = 30000
+	master.eligibility = true
+	kafkastore.topic.replication.factor = 3
+	kafkastore.timeout.ms = 500
+	host.name = wlezzar-HP-Pavilion-dv6-Notebook-PC
+	schema.registry.zk.namespace = schema_registry
+	kafkastore.init.timeout.ms = 60000
+	metrics.num.samples = 2
+ (io.confluent.kafka.schemaregistry.rest.SchemaRegistryConfig:135)
+[2016-02-17 22:25:01,045] INFO Initialized the consumer offset to -1 (io.confluent.kafka.schemaregistry.storage.KafkaStoreReaderThread:86)
+[2016-02-17 22:25:02,009] WARN Creating the schema topic _schemas using a replication factor of 1, which is less than the desired one of 3. If this is a production environment, it's crucial to add more brokers and increase the replication factor of the topic. (io.confluent.kafka.schemaregistry.storage.KafkaStore:176)
+[2016-02-17 22:25:02,306] INFO [kafka-store-reader-thread-_schemas], Starting  (io.confluent.kafka.schemaregistry.storage.KafkaStoreReaderThread:68)
+[2016-02-17 22:25:02,844] INFO Wait to catch up until the offset of the last message at 0 (io.confluent.kafka.schemaregistry.storage.KafkaStore:225)
+[2016-02-17 22:25:02,973] INFO Created schema registry namespace localhost:2181/schema_registry (io.confluent.kafka.schemaregistry.storage.KafkaSchemaRegistry:199)
+[2016-02-17 22:25:03,018] INFO Successfully elected the new master: {"host":"wlezzar-HP-Pavilion-dv6-Notebook-PC","port":8081,"master_eligibility":true,"version":1} (io.confluent.kafka.schemaregistry.zookeeper.ZookeeperMasterElector:83)
+[2016-02-17 22:25:03,032] INFO Successfully elected the new master: {"host":"wlezzar-HP-Pavilion-dv6-Notebook-PC","port":8081,"master_eligibility":true,"version":1} (io.confluent.kafka.schemaregistry.zookeeper.ZookeeperMasterElector:83)
+[2016-02-17 22:25:03,145] INFO Logging initialized @5361ms (org.eclipse.jetty.util.log:186)
+[2016-02-17 22:25:03,234] INFO jetty-9.2.12.v20150709 (org.eclipse.jetty.server.Server:327)
+[2016-02-17 22:25:04,261] INFO HV000001: Hibernate Validator 5.1.2.Final (org.hibernate.validator.internal.util.Version:27)
+[2016-02-17 22:25:04,492] INFO Started o.e.j.s.ServletContextHandler@17dcef2{/,null,AVAILABLE} (org.eclipse.jetty.server.handler.ContextHandler:744)
+[2016-02-17 22:25:04,501] INFO Started NetworkTrafficServerConnector@1f38957{HTTP/1.1}{0.0.0.0:8081} (org.eclipse.jetty.server.NetworkTrafficServerConnector:266)
+[2016-02-17 22:25:04,503] INFO Started @6721ms (org.eclipse.jetty.server.Server:379)
+[2016-02-17 22:25:04,503] INFO Server started, listening for requests... (io.confluent.kafka.schemaregistry.rest.SchemaRegistryMain:45)
+[2016-02-17 22:25:29,120] INFO Wait to catch up until the offset of the last message at 1 (io.confluent.kafka.schemaregistry.storage.KafkaStore:225)
+[2016-02-17 22:25:29,357] INFO 127.0.0.1 - - [17/Feb/2016:22:25:28 +0100] "POST /subjects/WikiStreamEvents-value/versions HTTP/1.1" 200 8  1329 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:50,361] INFO 127.0.0.1 - - [17/Feb/2016:22:37:50 +0100] "GET /subjects/WikiStreamEvents-value/versions/latest HTTP/1.1" 200 1143  7 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:50,641] INFO 127.0.0.1 - - [17/Feb/2016:22:37:50 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  7 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:50,745] INFO 127.0.0.1 - - [17/Feb/2016:22:37:50 +0100] "POST /subjects/WikiStreamEvents-value/versions HTTP/1.1" 200 8  9 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:55,297] INFO 127.0.0.1 - - [17/Feb/2016:22:37:55 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  3 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:55,297] INFO 127.0.0.1 - - [17/Feb/2016:22:37:55 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  3 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:55,300] INFO 127.0.0.1 - - [17/Feb/2016:22:37:55 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  9 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:55,307] INFO 127.0.0.1 - - [17/Feb/2016:22:37:55 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  15 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:37:55,864] INFO 127.0.0.1 - - [17/Feb/2016:22:37:55 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  3 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:38:00,061] INFO 127.0.0.1 - - [17/Feb/2016:22:38:00 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  5 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:38:00,066] INFO 127.0.0.1 - - [17/Feb/2016:22:38:00 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  18 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:38:00,078] INFO 127.0.0.1 - - [17/Feb/2016:22:38:00 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  7 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:38:00,092] INFO 127.0.0.1 - - [17/Feb/2016:22:38:00 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  5 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:38:00,946] INFO 127.0.0.1 - - [17/Feb/2016:22:38:00 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  4 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:38:05,058] INFO 127.0.0.1 - - [17/Feb/2016:22:38:05 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  4 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:36,965] INFO 127.0.0.1 - - [17/Feb/2016:22:41:36 +0100] "GET /subjects/WikiStreamEvents-value/versions/latest HTTP/1.1" 200 1143  5 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:40,032] INFO 127.0.0.1 - - [17/Feb/2016:22:41:40 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  3 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:40,033] INFO 127.0.0.1 - - [17/Feb/2016:22:41:40 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  4 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:40,039] INFO 127.0.0.1 - - [17/Feb/2016:22:41:40 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  5 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:40,044] INFO 127.0.0.1 - - [17/Feb/2016:22:41:40 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  14 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:40,471] INFO 127.0.0.1 - - [17/Feb/2016:22:41:40 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  6 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:45,057] INFO 127.0.0.1 - - [17/Feb/2016:22:41:45 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  10 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:45,067] INFO 127.0.0.1 - - [17/Feb/2016:22:41:45 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  8 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:45,069] INFO 127.0.0.1 - - [17/Feb/2016:22:41:45 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  13 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:45,071] INFO 127.0.0.1 - - [17/Feb/2016:22:41:45 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  29 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:45,287] INFO 127.0.0.1 - - [17/Feb/2016:22:41:45 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  4 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:50,054] INFO 127.0.0.1 - - [17/Feb/2016:22:41:50 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  11 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:50,055] INFO 127.0.0.1 - - [17/Feb/2016:22:41:50 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  8 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:50,055] INFO 127.0.0.1 - - [17/Feb/2016:22:41:50 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  8 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:50,069] INFO 127.0.0.1 - - [17/Feb/2016:22:41:50 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  5 (io.confluent.rest-utils.requests:77)
+[2016-02-17 22:41:50,254] INFO 127.0.0.1 - - [17/Feb/2016:22:41:50 +0100] "GET /schemas/ids/1 HTTP/1.1" 200 1089  9 (io.confluent.rest-utils.requests:77)
