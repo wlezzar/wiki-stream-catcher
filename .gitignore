@@ -4,3 +4,5 @@
 
 */target
 */dependency-reduced-pom.xml
+
+WikiStreamHandler/src/main/scala/net/lezzar/wikistream/jobs/Tests.scala

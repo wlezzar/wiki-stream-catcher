@@ -36,7 +36,7 @@ class WikiNamespace(socketIO_client.BaseNamespace):
 
 
     def on_connect(self):
-        self.emit('subscribe', 'commons.wikimedia.org')
+        self.emit('subscribe', '*')
 
 
 socketIO = socketIO_client.SocketIO('stream.wikimedia.org', 80)

@@ -1,16 +1,16 @@
-[2016-02-17 22:25:14,882][INFO ][node                     ] [walid-node] version[2.2.0], pid[3250], build[8ff36d1/2016-01-27T13:32:39Z]
-[2016-02-17 22:25:14,891][INFO ][node                     ] [walid-node] initializing ...
-[2016-02-17 22:25:15,885][INFO ][plugins                  ] [walid-node] modules [lang-expression, lang-groovy], plugins [], sites []
-[2016-02-17 22:25:15,991][INFO ][env                      ] [walid-node] using [1] data paths, mounts [[/ (/dev/sda3)]], net usable_space [239gb], net total_space [274.8gb], spins? [possibly], types [ext4]
-[2016-02-17 22:25:15,992][INFO ][env                      ] [walid-node] heap size [998.4mb], compressed ordinary object pointers [unknown]
-[2016-02-17 22:25:19,434][INFO ][node                     ] [walid-node] initialized
-[2016-02-17 22:25:19,434][INFO ][node                     ] [walid-node] starting ...
-[2016-02-17 22:25:19,549][INFO ][transport                ] [walid-node] publish_address {127.0.0.1:9300}, bound_addresses {[::1]:9300}, {127.0.0.1:9300}
-[2016-02-17 22:25:19,556][INFO ][discovery                ] [walid-node] lezzar-cluster/87BEE8taQfSL8g022RO-RQ
-[2016-02-17 22:25:22,614][INFO ][cluster.service          ] [walid-node] new_master {walid-node}{87BEE8taQfSL8g022RO-RQ}{127.0.0.1}{127.0.0.1:9300}, reason: zen-disco-join(elected_as_master, [0] joins received)
-[2016-02-17 22:25:22,635][INFO ][http                     ] [walid-node] publish_address {127.0.0.1:9200}, bound_addresses {[::1]:9200}, {127.0.0.1:9200}
-[2016-02-17 22:25:22,635][INFO ][node                     ] [walid-node] started
-[2016-02-17 22:25:23,840][INFO ][gateway                  ] [walid-node] recovered [3] indices into cluster_state
-[2016-02-17 22:25:28,245][INFO ][cluster.routing.allocation] [walid-node] Cluster health status changed from [RED] to [YELLOW] (reason: [shards started [[.kibana][0]] ...]).
-[2016-02-17 22:25:37,163][INFO ][cluster.metadata         ] [walid-node] [wiki_edits] creating index, cause [api], templates [], shards [5]/[0], mappings [raw_wiki_edits]
-[2016-02-17 22:25:38,042][INFO ][cluster.routing.allocation] [walid-node] Cluster health status changed from [RED] to [YELLOW] (reason: [shards started [[wiki_edits][4]] ...]).
+[2016-02-21 10:40:17,025][INFO ][node                     ] [walid-node] version[2.2.0], pid[3073], build[8ff36d1/2016-01-27T13:32:39Z]
+[2016-02-21 10:40:17,031][INFO ][node                     ] [walid-node] initializing ...
+[2016-02-21 10:40:17,986][INFO ][plugins                  ] [walid-node] modules [lang-expression, lang-groovy], plugins [], sites []
+[2016-02-21 10:40:18,080][INFO ][env                      ] [walid-node] using [1] data paths, mounts [[/ (/dev/sda3)]], net usable_space [236.6gb], net total_space [274.8gb], spins? [possibly], types [ext4]
+[2016-02-21 10:40:18,080][INFO ][env                      ] [walid-node] heap size [998.4mb], compressed ordinary object pointers [unknown]
+[2016-02-21 10:40:21,602][INFO ][node                     ] [walid-node] initialized
+[2016-02-21 10:40:21,603][INFO ][node                     ] [walid-node] starting ...
+[2016-02-21 10:40:21,733][INFO ][transport                ] [walid-node] publish_address {127.0.0.1:9300}, bound_addresses {[::1]:9300}, {127.0.0.1:9300}
+[2016-02-21 10:40:21,743][INFO ][discovery                ] [walid-node] lezzar-cluster/fekpNeY4ReOpadBjdy9Dkw
+[2016-02-21 10:40:24,799][INFO ][cluster.service          ] [walid-node] new_master {walid-node}{fekpNeY4ReOpadBjdy9Dkw}{127.0.0.1}{127.0.0.1:9300}, reason: zen-disco-join(elected_as_master, [0] joins received)
+[2016-02-21 10:40:24,816][INFO ][http                     ] [walid-node] publish_address {127.0.0.1:9200}, bound_addresses {[::1]:9200}, {127.0.0.1:9200}
+[2016-02-21 10:40:24,816][INFO ][node                     ] [walid-node] started
+[2016-02-21 10:40:26,053][INFO ][gateway                  ] [walid-node] recovered [3] indices into cluster_state
+[2016-02-21 10:40:30,396][INFO ][cluster.routing.allocation] [walid-node] Cluster health status changed from [RED] to [YELLOW] (reason: [shards started [[.kibana][0]] ...]).
+[2016-02-21 10:40:39,935][INFO ][cluster.metadata         ] [walid-node] [wiki_edits] creating index, cause [api], templates [], shards [5]/[0], mappings [raw_wiki_edits]
+[2016-02-21 10:40:40,817][INFO ][cluster.routing.allocation] [walid-node] Cluster health status changed from [RED] to [YELLOW] (reason: [shards started [[wiki_edits][4]] ...]).

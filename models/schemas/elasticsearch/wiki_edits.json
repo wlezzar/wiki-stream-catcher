@@ -58,7 +58,7 @@
             "type": "string", "index" : "not_analyzed"
           },
           "timestamp": {
-            "type": "date"
+            "type": "date", "format":"epoch_second"
           },
           "title": {
             "type": "string", "index" : "analyzed"
