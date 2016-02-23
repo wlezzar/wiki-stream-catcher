@@ -1,6 +1,6 @@
 package net.lezzar.wikistream.metrics
 
-import com.codahale.metrics.{ConsoleReporter, CsvReporter, JmxReporter, MetricRegistry}
+import com.codahale.metrics.MetricRegistry
 import net.lezzar.wikistream.metrics.reporters.{ConsoleMetricSink, JmxMetricSink}
 import net.lezzar.wikistream.metrics.source.MetricSource
 import net.lezzar.wikistream.tools.Logging
