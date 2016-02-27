@@ -4,7 +4,7 @@ import kafka.client.ClientUtils
 import kafka.cluster.Broker
 import kafka.common.TopicAndPartition
 import kafka.consumer.SimpleConsumer
-
+import scala.collection.mutable.{Map => MutMap}
 /**
   * Created by wlezzar on 13/02/16.
   */
@@ -40,6 +40,16 @@ object Utils {
     }
   }
 
+  def toMutMap(x:Iterable[(String, Int,Long)]):MutMap[(String, Int),Long] = {
+    val y = MutMap[(String, Int),Long]()
+    for ((a, b, c) <- x) y.put((a, b),c)
+    y
+  }
 
+  def toMutMap(x:Map[(String, Int),Long]):MutMap[(String, Int),Long] = {
+    val y = MutMap[(String, Int), Long]()
+    for ((a,b) <- x) y.put((a._1,a._2),b)
+    y
+  }
 
 }
