@@ -17,7 +17,7 @@ abstract class RddPartitionsInputBasedMonitorableSink[T] extends Sink[RDD[T]] {
   def fallback(row:T):RowOutputStatus = RowOutputSuccess("not handled")
 
   override def apply(data:RDD[T]):Unit = {
-    // unpack instance attributes into variables to enable using them wihtout serializing the whole object
+    // assign instance attributes to variables to enable using them without serializing the whole object
     val sinkName = this.name
 
     // Process rows, update metrics and log results

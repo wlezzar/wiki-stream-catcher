@@ -8,3 +8,5 @@
 WikiStreamHandler/src/main/scala/net/lezzar/wikistream/jobs/Tests.scala
 scripts/launcher/logs/*
 
+WikiStreamHandler/WikiStreamHandler.iml
+scripts/launcher/run/

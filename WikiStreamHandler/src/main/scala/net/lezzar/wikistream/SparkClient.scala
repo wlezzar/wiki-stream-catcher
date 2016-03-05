@@ -1,9 +1,10 @@
 package net.lezzar.wikistream
 
+import net.lezzar.wikistream.tools.Logging
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.sql.SQLContext
 import org.apache.spark.streaming.{Seconds, StreamingContext}
-import org.apache.spark.{Logging, SparkConf, SparkContext}
+import org.apache.spark.{SparkConf, SparkContext}
 
 /**
   * Created by wlezzar on 10/11/15.

@@ -10,5 +10,7 @@ abstract class RddRowsInputBasedMonitorableSink[T] extends RddPartitionsInputBas
   // The actual row processing
   def process(row:T):RowOutputStatus
 
-  override def process(partition:Iterator[T]):Iterator[(T, RowOutputStatus)] = partition.map(row => (row, process(row)))
+  override def process(partition:Iterator[T]):Iterator[(T, RowOutputStatus)] = {
+    partition.map(row => (row, process(row)))
+  }
 }

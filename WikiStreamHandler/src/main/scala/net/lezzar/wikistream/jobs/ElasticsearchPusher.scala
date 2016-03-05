@@ -1,12 +1,13 @@
 package net.lezzar.wikistream.jobs
 
-import com.codahale.metrics.Gauge
 import io.confluent.kafka.serializers.KafkaAvroDecoder
+import kafka.common.TopicAndPartition
+import kafka.message.MessageAndMetadata
 import net.lezzar.wikistream.SparkJob
 import net.lezzar.wikistream.metrics.GlobalMetricRegistry
 import net.lezzar.wikistream.output.OutputPipe
 import net.lezzar.wikistream.output.sinks.JsonRddToEsSink
-import net.lezzar.wikistream.tools.{OffsetTrackerMetricSource, OffsetTracker, Utils}
+import net.lezzar.wikistream.tools._
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.kafka.{HasOffsetRanges, OffsetRange, KafkaUtils}
 
@@ -22,7 +23,8 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
     KAFKA_CONF_BOOTSTRAP_SERVERS,
     KAFKA_CONF_SCHEMA_REG_URL,
     KAFKA_TOPICS,
-    ES_OUTPUT_MAPPING
+    ES_OUTPUT_MAPPING,
+    OFFSET_STORE_PATH
   )
 
   //val currentOffsets = Utils.latestOffsets(get(KAFKA_CONF_BOOTSTRAP_SERVERS))
@@ -37,30 +39,42 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
 
     val topic:String = get(KAFKA_TOPICS)
 
-    val kafkaStream =
-      KafkaUtils.createDirectStream[Object, Object,KafkaAvroDecoder, KafkaAvroDecoder] (ssc, kafkaConf, Set(topic))
+    /* offset tracking :
+    * 1 - Instantiate an offset store to restore last commited offsets and save future ones
+    * 2 - Load the last commited state or fetch the last ones from Kafka in case they have not
+    * been stored
+    * 3 - for monitoring : Instantiate an offset tracker metric source to report the offset
+    * tracker state
+    * 4 - Register the metric source to the global metric registry
+    * */
+    val offsetStore = new FileSystemOffsetStore(get(OFFSET_STORE_PATH))
+
+    val initialOffsets = offsetStore.restore().getOrElse(
+      Utils
+        .latestOffsets(get(KAFKA_CONF_BOOTSTRAP_SERVERS),topic)
+        .map{case (partition,offset) => ((topic, partition), offset)}
+        .toMap
+    )
+
+    val offsetTracker = new OffsetTracker(initialOffsets)
+
+    GlobalMetricRegistry.registerSource(
+      new OffsetTrackerMetricSource("ElasticsearchPusher.consumed", offsetTracker
+      ))
+
+    /* creating the main DStream */
+    val kafkaStream = KafkaUtils.createDirectStream[Object, Object,KafkaAvroDecoder, KafkaAvroDecoder, Object](
+      ssc,
+      kafkaConf,
+      initialOffsets.map{case ((top, par),off) => (TopicAndPartition(top, par),off)},
+      (v:MessageAndMetadata[Object, Object]) => v.message()
+    )
 
     val sinks = List(
-      new JsonRddToEsSink("EsSink", ES_OUTPUT_MAPPING, MyClients.esClient)
+      new JsonRddToEsSink("EsSink", ES_OUTPUT_MAPPING, ElasticsearchClient.instance)
     )
 
     val outputPipe = new OutputPipe("WikiStreamPipe",sinks)
-
-    /* for monitoring
-    * 1 - Instantiate an offset tracker to track consumed messages. We need an
-    * initial state for that
-    * 2 - Instantiate an offset tracker metric source to watch the offset tracker state
-    * 3 - Register the metric source to the global metric registry
-    * */
-    val initialOffsets = Utils
-      .latestOffsets(get(KAFKA_CONF_BOOTSTRAP_SERVERS),topic)
-      .map{case (p,o) => (topic, p, o)}
-
-    val consumedOffsetsTracker = new OffsetTracker(initialOffsets)
-
-    GlobalMetricRegistry.registerSource(
-      new OffsetTrackerMetricSource("ElasticsearchPusher.consumed", consumedOffsetsTracker
-    ))
 
     // Necessary to follow the offsets
     var offsetRanges = Array[OffsetRange]()
@@ -70,16 +84,18 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
         offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
         rdd
       }
-      .map(_._2.toString)
+      .map(_.toString)
       .foreachRDD { rdd =>
         outputPipe(rdd)
         /* update offset tracker for monitoring */
         offsetRanges.foreach{ offRange =>
-          consumedOffsetsTracker.updateState(
+          offsetTracker.updateState(
             offRange.topic,
             offRange.partition,
             offRange.untilOffset
           )}
+        /* commit offsets */
+        offsetStore.save(offsetTracker.getState())
         logInfo(s"info :\n${offsetRanges.mkString("\n")}")
       }
 
@@ -95,6 +111,7 @@ object ElasticsearchPusher {
     final val KAFKA_CONF_SCHEMA_REG_URL = "kafka.conf.schema.registry.url"
     final val KAFKA_TOPICS = "kafka.topic"
     final val ES_OUTPUT_MAPPING = "elasticsearch.output.mapping"
+    final val OFFSET_STORE_PATH = "offset.store.path"
   }
 
   def main(args: Array[String]) {
