@@ -65,7 +65,7 @@ object PrebuiltSparkContext extends Logging {
       conf.get("spark.master")
     } catch {
       case e: NoSuchElementException =>
-        logWarning("No master is set, using 'local[*]'")
+        logWarn("No master is set, using 'local[*]'")
         conf.setMaster("local[*]")
     }
 

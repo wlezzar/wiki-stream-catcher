@@ -27,9 +27,6 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
     OFFSET_STORE_PATH
   )
 
-  //val currentOffsets = Utils.latestOffsets(get(KAFKA_CONF_BOOTSTRAP_SERVERS))
-  //GlobalMetricRegistry.instance.register(s"${this.getClass.getSimpleName}.offsets")
-
   override def run(): Unit = {
     val kafkaConf = Map[String,String](
       "bootstrap.servers" -> get(KAFKA_CONF_BOOTSTRAP_SERVERS),
@@ -39,16 +36,14 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
 
     val topic:String = get(KAFKA_TOPICS)
 
-    /* offset tracking :
-    * 1 - Instantiate an offset store to restore last commited offsets and save future ones
-    * 2 - Load the last commited state or fetch the last ones from Kafka in case they have not
-    * been stored
-    * 3 - for monitoring : Instantiate an offset tracker metric source to report the offset
-    * tracker state
-    * 4 - Register the metric source to the global metric registry
-    * */
+    /** offset tracking and retrieving **/
+    /************************************/
+
+    /* 1 - Instantiate an offset store to restore last commited offsets and save future ones */
     val offsetStore = new FileSystemOffsetStore(get(OFFSET_STORE_PATH))
 
+    /* 2 - Load the last commited state from the offset store or fetch the last ones from Kafka
+     * in case they have not been retrieved */
     val initialOffsets = offsetStore.restore().getOrElse(
       Utils
         .latestOffsets(get(KAFKA_CONF_BOOTSTRAP_SERVERS),topic)
@@ -56,38 +51,44 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
         .toMap
     )
 
+    /* 3 - for offset tracking : Instantiate an offset tracker */
     val offsetTracker = new OffsetTracker(initialOffsets)
 
+    /* 4 - for monitoring : Register an offset tracker metric source that reports the offset tracker state to
+     * the global metric registry */
     GlobalMetricRegistry.registerSource(
-      new OffsetTrackerMetricSource("ElasticsearchPusher.consumed", offsetTracker
-      ))
+      new OffsetTrackerMetricSource("ElasticsearchPusher.consumed", offsetTracker)
+    )
+
+    /** end of offset tracking preparation **/
 
     /* creating the main DStream */
     val kafkaStream = KafkaUtils.createDirectStream[Object, Object,KafkaAvroDecoder, KafkaAvroDecoder, Object](
       ssc,
       kafkaConf,
       initialOffsets.map{case ((top, par),off) => (TopicAndPartition(top, par),off)},
-      (v:MessageAndMetadata[Object, Object]) => v.message()
+      (v:MessageAndMetadata[Object, Object]) => v.message() // for now, we only the message
     )
 
-    val sinks = List(
-      new JsonRddToEsSink("EsSink", ES_OUTPUT_MAPPING, ElasticsearchClient.instance)
+    val outputPipe = new OutputPipe(
+      "WikiStreamPipe",
+      sinks = List(new JsonRddToEsSink("EsSink", ES_OUTPUT_MAPPING, ElasticsearchClient.instance))
     )
-
-    val outputPipe = new OutputPipe("WikiStreamPipe",sinks)
 
     // Necessary to follow the offsets
     var offsetRanges = Array[OffsetRange]()
 
     kafkaStream
+      // this transform step is a necessary boilerplate to access the consumed offsets
       .transform{rdd =>
         offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
         rdd
       }
+      // the real stream processing
       .map(_.toString)
       .foreachRDD { rdd =>
         outputPipe(rdd)
-        /* update offset tracker for monitoring */
+        /* update offset tracker state */
         offsetRanges.foreach{ offRange =>
           offsetTracker.updateState(
             offRange.topic,
