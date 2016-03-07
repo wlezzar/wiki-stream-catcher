@@ -1,18 +1,38 @@
-# Start Zookeeper and expose port 2181 for use by the host machine
-docker run -d --name zookeeper -p 2181:2181 confluent/zookeeper
+docker run -d --name zk01 \
+  -e zk_id=1 \
+  -e zk_server_1=zk01:2888:3888 \
+  -e zk_server_2=zk02:2888:3888 \
+  -e zk_server_3=zk03:2888:3888 \
+  -e zk_maxClientCnxns=10 \
+  cgswong/confluent-zookeeper
 
-# Start Kafka and expose port 9092 for use by the host machine
-docker run -d --name kafka -p 9092:9092 --link zookeeper:zookeeper confluent/kafka
+docker run -d --name zk02 \
+  -e zk_id=2 \
+  -e zk_server_1=zk01:2888:3888 \
+  -e zk_server_2=zk02:2888:3888 \
+  -e zk_server_3=zk03:2888:3888 \
+  -e zk_maxClientCnxns=10 \
+  cgswong/confluent-zookeeper
 
-# Start Schema Registry and expose port 8081 for use by the host machine
-docker run -d --name schema-registry -p 8081:8081 --link zookeeper:zookeeper --link kafka:kafka confluent/schema-registry
+docker run -d --name zk03 \
+  -e zk_id=3 \
+  -e zk_server_1=zk01:2888:3888 \
+  -e zk_server_2=zk02:2888:3888 \
+  -e zk_server_3=zk03:2888:3888 \
+  -e zk_maxClientCnxns=10 \
+  cgswong/confluent-zookeeper
 
-# Start REST Proxy and expose port 8082 for use by the host machine
-docker run -d --name rest-proxy -p 8082:8082 --link zookeeper:zookeeper --link kafka:kafka --link schema-registry:schema-registry confluent/rest-proxy
-    
-# Start elasticsearch and export ports for use by the host machine
-docker run -d --name elasticsearch elasticsearch
+docker run -d --name kafka01 \
+  -e kafka_broker_id=1 \
+  -e kafka_zookeeper_connect=zk01:2181,zk02:2181,zk03:2181 \
+  cgswong/confluent-kafka
 
-# Start elasticsearch and export ports for use by the host machine
-docker run -d --name kibana --link elasticsearch:elasticsearch -p 5601:5601 kibana
+docker run -d --name kafka02 \
+  -e kafka_broker_id=2 \
+  -e kafka_zookeeper_connect=zk01:2181,zk02:2181,zk03:2181 \
+  cgswong/confluent-kafka
 
+docker run -d --name kafka03 \
+  -e kafka_broker_id=3 \
+  -e kafka_zookeeper_connect=zk01:2181,zk02:2181,zk03:2181 \
+  cgswong/confluent-kafka
