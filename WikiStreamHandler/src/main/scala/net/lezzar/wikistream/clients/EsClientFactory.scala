@@ -18,7 +18,6 @@ object EsClientFactory {
         .builder()
         .settings(Settings.settingsBuilder().put("cluster.name", clusterName).build())
         .build()
-        .addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName("localhost"), 9300))
       nodes.foldLeft(client){(c:TransportClient,node:String) =>
         require(node.matches("^\\S+:\\d+$"), s"elasticsearch url not valid : $node")
         val parts = node.split(":")
