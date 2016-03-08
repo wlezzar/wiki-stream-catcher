@@ -12,7 +12,7 @@ import scala.util.Try
   * Created by wlezzar on 20/02/16.
   */
 class JsonRddToEsSink(val name:String, index:String, mapping:String, esClient: => Client)
-  extends RddRowsInputBasedMonitorableSink[String] with Serializable {
+  extends RddRowsInputBasedMonitorableSink[String] {
 
   def this(name:String,
            index:String,
@@ -23,9 +23,9 @@ class JsonRddToEsSink(val name:String, index:String, mapping:String, esClient: =
 
   // The actual row processing
   override def process(row: String): RowOutputStatus = {
-    
+    val client = esClient
     val response = util.Try(
-      esClient
+      client
         .prepareIndex(index, mapping)
         .setSource(row)
         .get()
