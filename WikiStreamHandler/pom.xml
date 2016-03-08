@@ -13,6 +13,7 @@
         <confluent.version>2.0.0</confluent.version>
         <sparkEs.version>2.2.0</sparkEs.version>
         <es.version>2.2.0</es.version>
+        <kafka.clients.version>0.9.0.1</kafka.clients.version>
 
         <spark.scope>provided</spark.scope>
     </properties>
@@ -66,13 +67,11 @@
             <version>${confluent.version}</version>
         </dependency>
 
-        <!--
         <dependency>
-            <groupId>org.elasticsearch</groupId>
-            <artifactId>elasticsearch-hadoop</artifactId>
-            <version>${sparkEs.version}</version>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.clients.version}</version>
         </dependency>
-        -->
 
     </dependencies>
 

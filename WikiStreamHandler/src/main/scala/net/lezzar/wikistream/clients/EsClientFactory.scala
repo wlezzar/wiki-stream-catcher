@@ -1,4 +1,4 @@
-package net.lezzar.wikistream.tools
+package net.lezzar.wikistream.clients
 
 import java.net.InetAddress
 
@@ -11,7 +11,7 @@ import scala.util.Try
 /**
   * Created by wlezzar on 05/03/16.
   */
-object ElasticsearchClient {
+object EsClientFactory {
   def create(clusterName:String="elasticsearch", nodes:List[String]=List("localhost:9300")):Try[TransportClient] = {
     Try{
       val client = TransportClient
