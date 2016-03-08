@@ -6,6 +6,7 @@ $BASEDIR/stop_local_env.sh
 LOGS_DIR=/tmp/wiki-stream-catcher/logs
 rm -rf $LOGS_DIR
 mkdir -p $LOGS_DIR
+rm $BASEDIR/run/*
 
 echo -e "\e[1;92mStarting Zookepper...\e[0m"
 $CONFLUENT_HOME/bin/zookeeper-server-start $CONFLUENT_HOME/etc/kafka/zookeeper.properties > $LOGS_DIR/zookeeper.log 2>&1 &

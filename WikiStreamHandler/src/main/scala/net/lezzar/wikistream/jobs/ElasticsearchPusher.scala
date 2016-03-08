@@ -23,6 +23,8 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
     KAFKA_CONF_BOOTSTRAP_SERVERS,
     KAFKA_CONF_SCHEMA_REG_URL,
     KAFKA_TOPICS,
+    ES_SERVER_HOSTS,
+    ES_CLUSTER_NAME,
     ES_OUTPUT_MAPPING,
     OFFSET_STORE_PATH
   )
@@ -72,7 +74,12 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
 
     val outputPipe = new OutputPipe(
       "WikiStreamPipe",
-      sinks = List(new JsonRddToEsSink("EsSink", ES_OUTPUT_MAPPING, ElasticsearchClient.instance))
+      sinks = List(
+        new JsonRddToEsSink(
+          name = "EsSink",
+          mapping = get(ES_OUTPUT_MAPPING),
+          clusterName = get(ES_CLUSTER_NAME),
+          nodes = get[String](ES_SERVER_HOSTS).split(",").toList))
     )
 
     // Necessary to follow the offsets
@@ -111,6 +118,8 @@ object ElasticsearchPusher {
     final val KAFKA_CONF_BOOTSTRAP_SERVERS = "kafka.conf.bootstrap.servers"
     final val KAFKA_CONF_SCHEMA_REG_URL = "kafka.conf.schema.registry.url"
     final val KAFKA_TOPICS = "kafka.topic"
+    final val ES_SERVER_HOSTS = "elasticsearch.server.hosts"
+    final val ES_CLUSTER_NAME = "elasticsearch.cluster.name"
     final val ES_OUTPUT_MAPPING = "elasticsearch.output.mapping"
     final val OFFSET_STORE_PATH = "offset.store.path"
   }

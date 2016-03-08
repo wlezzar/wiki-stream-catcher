@@ -9,5 +9,7 @@ $SPARK_BIN/spark-submit --class net.lezzar.wikistream.jobs.ElasticsearchPusher \
   "kafka.conf.bootstrap.servers=localhost:9092" \
   "kafka.conf.schema.registry.url=http://localhost:8081" \
   "kafka.topic=WikiStreamEvents" \
+  "elasticsearch.cluster.name=lezzar-cluster" \
+  "elasticsearch.server.hosts=localhost:9300" \
   "elasticsearch.output.mapping=wiki_edits/raw_wiki_edits" \
   "offset.store.path=$PROJECT_HOME/scripts/launcher/run/offsets"
