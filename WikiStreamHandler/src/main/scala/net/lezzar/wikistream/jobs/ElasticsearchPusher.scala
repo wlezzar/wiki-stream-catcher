@@ -77,7 +77,8 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
       sinks = List(
         new JsonRddToEsSink(
           name = "EsSink",
-          mapping = get(ES_OUTPUT_MAPPING),
+          index = get(ES_OUTPUT_MAPPING, _.split("/")(0)),
+          mapping = get(ES_OUTPUT_MAPPING, _.split("/")(1)),
           clusterName = get(ES_CLUSTER_NAME),
           nodes = get[String](ES_SERVER_HOSTS).split(",").toList))
     )

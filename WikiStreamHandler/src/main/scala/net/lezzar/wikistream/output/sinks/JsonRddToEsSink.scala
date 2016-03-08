@@ -11,21 +11,22 @@ import scala.util.Try
 /**
   * Created by wlezzar on 20/02/16.
   */
-class JsonRddToEsSink(val name:String, mapping:String, esClient: => Client)
+class JsonRddToEsSink(val name:String, index:String, mapping:String, esClient: => Client)
   extends RddRowsInputBasedMonitorableSink[String] with Serializable {
 
   def this(name:String,
+           index:String,
            mapping:String,
            clusterName:String="elasticsearch",
            nodes:List[String]=List("localhost:9300")) =
-    this(name, mapping, EsClientFactory.create(clusterName, nodes).get)
+    this(name, index, mapping, EsClientFactory.create(clusterName, nodes).get)
 
   // The actual row processing
   override def process(row: String): RowOutputStatus = {
     
     val response = util.Try(
       esClient
-        .prepareIndex("wiki_edits","raw_wiki_edits")
+        .prepareIndex(index, mapping)
         .setSource(row)
         .get()
     )
