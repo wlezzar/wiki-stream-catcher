@@ -35,11 +35,6 @@ trait Configurable {
       case s if s.isEmpty => "ok"
       case s => throw new IllegalArgumentException(s"Some required parameters are missing : ${s.reduce(_ + ", "+ _)}")
     }
-
-    givenParams -- (requiredParams union optionalParams) match {
-      case s if s.isEmpty => "ok"
-      case s => throw new IllegalArgumentException(s"Uknown parameters : ${s.reduce(_ + ", "+ _)}")
-    }
   }
 }
 
