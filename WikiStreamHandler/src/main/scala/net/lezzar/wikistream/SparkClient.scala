@@ -18,7 +18,7 @@ abstract class SparkClient(protected val sc:SparkContext = null,
 }
 
 trait Configurable {
-  protected def conf:Map[String,String]
+  def conf:Map[String,String]
 
   val requiredParams:Set[String]
   val optionalParams:Set[String]
@@ -38,7 +38,7 @@ trait Configurable {
   }
 }
 
-abstract class SparkJob(_sc:SparkContext, _sqlContext:SQLContext = null, _ssc:StreamingContext = null, protected val conf:Map[String,String] = Map()) extends SparkClient(_sc,_sqlContext,_ssc) with Configurable {
+abstract class SparkJob(_sc:SparkContext, _sqlContext:SQLContext = null, _ssc:StreamingContext = null, val conf:Map[String,String] = Map()) extends SparkClient(_sc,_sqlContext,_ssc) with Configurable {
 
   def this(_sqlContext: SQLContext, _ssc: StreamingContext = null, _conf:Map[String,String] = Map()) = this(_sqlContext.sparkContext, _sqlContext, _ssc, _conf)
   def this(_sqlContext: SQLContext, _conf:Map[String,String]) = this(_sqlContext.sparkContext, _sqlContext, null, _conf)

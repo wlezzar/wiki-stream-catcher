@@ -21,11 +21,12 @@ class JsonRddToEsSink(val name:String, index:String, mapping:String, esClient: =
            nodes:List[String]=List("localhost:9300")) =
     this(name, index, mapping, EsClientFactory.create(clusterName, nodes).get)
 
+  //@transient lazy val client = esClient
+
   // The actual row processing
   override def process(row: String): RowOutputStatus = {
-    val client = esClient
     val response = util.Try(
-      client
+      ElasticSingleton.client
         .prepareIndex(index, mapping)
         .setSource(row)
         .get()
@@ -37,4 +38,8 @@ class JsonRddToEsSink(val name:String, index:String, mapping:String, esClient: =
     }
   }
 
+}
+
+object ElasticSingleton {
+  val client = EsClientFactory.create("lezzar-cluster").get
 }

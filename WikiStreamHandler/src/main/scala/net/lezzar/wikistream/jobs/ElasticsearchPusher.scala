@@ -1,5 +1,7 @@
 package net.lezzar.wikistream.jobs
 
+import java.util.Properties
+
 import io.confluent.kafka.serializers.KafkaAvroDecoder
 import kafka.common.TopicAndPartition
 import kafka.message.MessageAndMetadata
@@ -9,6 +11,7 @@ import net.lezzar.wikistream.output.OutputPipe
 import net.lezzar.wikistream.output.sinks.JsonRddToEsSink
 import net.lezzar.wikistream.tools._
 import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka.{HasOffsetRanges, OffsetRange, KafkaUtils}
 
 /**
@@ -22,107 +25,71 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
   override val requiredParams: Set[String] = Set(
     KAFKA_CONF_BOOTSTRAP_SERVERS,
     KAFKA_CONF_SCHEMA_REG_URL,
-    KAFKA_TOPICS,
+    STREAM_SOURCE_TOPICS,
     ES_SERVER_HOSTS,
     ES_CLUSTER_NAME,
     ES_OUTPUT_MAPPING,
-    OFFSET_STORE_PATH
+    OFFSET_STORE_PATH,
+    KAFKA_SINK_TOPIC
   )
 
   override def run(): Unit = {
-    val kafkaConf = Map[String,String](
-      "bootstrap.servers" -> get(KAFKA_CONF_BOOTSTRAP_SERVERS),
-      "schema.registry.url" -> get(KAFKA_CONF_SCHEMA_REG_URL),
-      "specific.avro.reader" -> "false"
-    )
 
-    val topic:String = get(KAFKA_TOPICS)
-
-    /** offset tracking and retrieving **/
-    /************************************/
-
-    /* 1 - Instantiate an offset store to restore last commited offsets and save future ones */
-    val offsetStore = new FileSystemOffsetStore(get(OFFSET_STORE_PATH))
-
-    /* 2 - Load the last commited state from the offset store or fetch the last ones from Kafka
-     * in case they have not been retrieved */
-    val initialOffsets = offsetStore.restore().getOrElse(
-      Utils
-        .latestOffsets(get(KAFKA_CONF_BOOTSTRAP_SERVERS),topic)
-        .map{case (partition,offset) => ((topic, partition), offset)}
-        .toMap
-    )
-
-    /* 3 - for offset tracking : Instantiate an offset tracker */
-    val offsetTracker = new OffsetTracker(initialOffsets)
-
-    /* 4 - for monitoring : Register an offset tracker metric source that reports the offset tracker state to
-     * the global metric registry */
-    GlobalMetricRegistry.registerSource(
-      new OffsetTrackerMetricSource("ElasticsearchPusher.consumed", offsetTracker)
-    )
-
-    /** end of offset tracking preparation **/
-
-    /* creating the main DStream */
-    val kafkaStream = KafkaUtils.createDirectStream[Object, Object,KafkaAvroDecoder, KafkaAvroDecoder, Object](
+    val pusher = new KafkaDirectStreamJob[Object, Object, KafkaAvroDecoder, KafkaAvroDecoder](
       ssc,
-      kafkaConf,
-      initialOffsets.map{case ((top, par),off) => (TopicAndPartition(top, par),off)},
-      (v:MessageAndMetadata[Object, Object]) => v.message() // for now, we only the message
-    )
+      extractConf(List("kafka.clients.global.")),
+      get(STREAM_SOURCE_TOPICS),
+      new FileSystemOffsetStore(get(OFFSET_STORE_PATH))) {
 
-    val outputPipe = new OutputPipe(
-      "WikiStreamPipe",
-      sinks = List(
-        new JsonRddToEsSink(
-          name = "EsSink",
-          index = get(ES_OUTPUT_MAPPING, _.split("/")(0)),
-          mapping = get(ES_OUTPUT_MAPPING, _.split("/")(1)),
-          clusterName = get(ES_CLUSTER_NAME),
-          nodes = get[String](ES_SERVER_HOSTS).split(",").toList))
-    )
+      val outputPipe = new OutputPipe(
+        "WikiStreamPipe",
+        sinks = List(
+          new JsonRddToEsSink(
+            name = "elasticsearch",
+            index = get(ES_OUTPUT_MAPPING, _.split("/")(0)),
+            mapping = get(ES_OUTPUT_MAPPING, _.split("/")(1)),
+            clusterName = get(ES_CLUSTER_NAME),
+            nodes = get[String](ES_SERVER_HOSTS).split(",").toList))
+      )
 
-    // Necessary to follow the offsets
-    var offsetRanges = Array[OffsetRange]()
-
-    kafkaStream
-      // this transform step is a necessary boilerplate to access the consumed offsets
-      .transform{rdd =>
-        offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
-        rdd
-      }
-      // the real stream processing
-      .map(_.toString)
-      .foreachRDD { rdd =>
-        outputPipe(rdd)
-        /* update offset tracker state */
-        offsetRanges.foreach{ offRange =>
-          offsetTracker.updateState(
-            offRange.topic,
-            offRange.partition,
-            offRange.untilOffset
-          )}
-        /* commit offsets */
-        offsetStore.save(offsetTracker.getState())
-        logInfo(s"info :\n${offsetRanges.mkString("\n")}")
+      override def process(stream: DStream[MessageAndMetadata[Object, Object]]): Unit = {
+        stream.map(_.message().toString).foreachRDD { rdd =>
+          outputPipe(rdd)
+          commit()
+        }
       }
 
-    ssc.start()
-    ssc.awaitTermination()
+    }
+
+    GlobalMetricRegistry.registerSource(
+      new OffsetTrackerMetricSource("elasticsearch.pusher.offsets",pusher.offsetTracker)
+    )
+
+    pusher.start()
+  }
+
+  def extractConf(prefixes:List[String]):Map[String,String] = {
+    val confs = prefixes.map { prefix =>
+      this
+        .conf
+        .filterKeys(_ startsWith prefix)
+        .map{ case (k,v) => (k.replaceFirst(prefix,""),v) }
+    }
+    if (confs.isEmpty) Map() else confs.reduce(_ ++ _)
   }
 }
 
 object ElasticsearchPusher {
 
   object Params {
-    final val KAFKA_CONF_BOOTSTRAP_SERVERS = "kafka.conf.bootstrap.servers"
-    final val KAFKA_CONF_SCHEMA_REG_URL = "kafka.conf.schema.registry.url"
-    final val KAFKA_TOPICS = "kafka.topic"
+    final val KAFKA_CONF_BOOTSTRAP_SERVERS = "kafka.clients.global.bootstrap.servers"
+    final val KAFKA_CONF_SCHEMA_REG_URL = "kafka.clients.global.schema.registry.url"
+    final val STREAM_SOURCE_TOPICS = "input.stream.kafka.topic"
     final val ES_SERVER_HOSTS = "elasticsearch.server.hosts"
     final val ES_CLUSTER_NAME = "elasticsearch.cluster.name"
     final val ES_OUTPUT_MAPPING = "elasticsearch.output.mapping"
-    final val OFFSET_STORE_PATH = "offset.store.path"
+    final val OFFSET_STORE_PATH = "input.stream.offset.store.path"
+    final val KAFKA_SINK_TOPIC = "archiver.target.topic"
   }
 
   def main(args: Array[String]) {
