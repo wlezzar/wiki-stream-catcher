@@ -1,8 +1,9 @@
-package net.lezzar.wikistream.jobs
+package net.lezzar.wikistream.kafka.streaming
 
 import kafka.common.TopicAndPartition
 import kafka.message.MessageAndMetadata
 import kafka.serializer.Decoder
+import net.lezzar.wikistream.metrics.GlobalMetricRegistry
 import net.lezzar.wikistream.tools._
 import org.apache.kafka.clients.CommonClientConfigs._
 import org.apache.spark.streaming.StreamingContext
@@ -14,12 +15,15 @@ import scala.util.{Failure, Success}
 /**
   * Created by wlezzar on 10/03/16.
   */
-abstract class KafkaDirectStreamJob[K, V, KD <: Decoder[K], VD <: Decoder[V]](ssc:StreamingContext,
-                                                                              kafkaConfig: Map[String,String],
-                                                                              topic:String,
-                                                                              offsetStore:OffsetStore)(implicit evidence$19 : scala.reflect.ClassTag[K], evidence$20 : scala.reflect.ClassTag[V], evidence$21 : scala.reflect.ClassTag[KD], evidence$22 : scala.reflect.ClassTag[VD]) extends Logging {
+abstract class KafkaDirectStream[K, V, KD <: Decoder[K], VD <: Decoder[V]](implicit evidence$19 : scala.reflect.ClassTag[K], evidence$20 : scala.reflect.ClassTag[V], evidence$21 : scala.reflect.ClassTag[KD], evidence$22 : scala.reflect.ClassTag[VD]) extends Logging {
 
-  val offsetTracker = {
+  def name:String
+  def ssc:StreamingContext
+  def kafkaConfig: Map[String,String]
+  def topic:String
+  def offsetStore:OffsetStore
+
+  lazy val offsetTracker = {
     val initialOffsets = offsetStore.restore().getOrElse(
       Utils.latestOffsets(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG),topic) match {
         case Success(offsets) => offsets
@@ -50,7 +54,12 @@ abstract class KafkaDirectStreamJob[K, V, KD <: Decoder[K], VD <: Decoder[V]](ss
       rdd
     }
 
+    GlobalMetricRegistry.registerSource(
+      new OffsetTrackerMetricSource(s"$name.offsets", offsetTracker)
+    )
+
     process(stream)
+
 
     ssc.start()
     ssc.awaitTermination()

@@ -2,7 +2,7 @@ package net.lezzar.wikistream.jobs
 
 import io.confluent.kafka.serializers.KafkaAvroDecoder
 import kafka.message.MessageAndMetadata
-import net.lezzar.wikistream.SparkJob
+import net.lezzar.wikistream.kafka.streaming.KafkaDirectStream
 import net.lezzar.wikistream.metrics.GlobalMetricRegistry
 import net.lezzar.wikistream.output.OutputPipe
 import net.lezzar.wikistream.output.sinks.JsonRddToEsSink
@@ -13,7 +13,9 @@ import org.apache.spark.streaming.dstream.DStream
 /**
   * Created by wlezzar on 20/02/16.
   */
-class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extends SparkJob(_ssc, conf) {
+class ElasticsearchPusher(val ssc:StreamingContext, val conf:Map[String,String])
+  extends KafkaDirectStream[Object, Object, KafkaAvroDecoder, KafkaAvroDecoder]
+    with Job {
 
   import ElasticsearchPusher.Params._
 
@@ -29,50 +31,33 @@ class ElasticsearchPusher(_ssc:StreamingContext, conf:Map[String,String]) extend
     KAFKA_SINK_TOPIC
   )
 
-  override def run(): Unit = {
+  override val name: String = "elasticsearch.pusher"
 
-    val pusher = new KafkaDirectStreamJob[Object, Object, KafkaAvroDecoder, KafkaAvroDecoder](
-      ssc,
-      extractConf(List("kafka.clients.global.")),
-      get(STREAM_SOURCE_TOPICS),
-      new FileSystemOffsetStore(get(OFFSET_STORE_PATH))) {
+  override val kafkaConfig: Map[String, String] = this.extractConf(List("kafka.clients.global."))
 
-      val outputPipe = new OutputPipe(
-        "WikiStreamPipe",
-        sinks = List(
-          new JsonRddToEsSink(
-            name = "elasticsearch",
-            index = get(ES_OUTPUT_MAPPING, _.split("/")(0)),
-            mapping = get(ES_OUTPUT_MAPPING, _.split("/")(1)),
-            clusterName = get(ES_CLUSTER_NAME),
-            nodes = get[String](ES_SERVER_HOSTS).split(",").toList))
-      )
+  override val offsetStore: OffsetStore = new FileSystemOffsetStore(get(OFFSET_STORE_PATH))
 
-      override def process(stream: DStream[MessageAndMetadata[Object, Object]]): Unit = {
-        stream.map(_.message().toString).foreachRDD { rdd =>
-          outputPipe(rdd)
-          commit()
-        }
-      }
+  override val topic: String = get(STREAM_SOURCE_TOPICS)
 
-    }
-
-    GlobalMetricRegistry.registerSource(
-      new OffsetTrackerMetricSource("elasticsearch.pusher.offsets",pusher.offsetTracker)
+  override def process(stream: DStream[MessageAndMetadata[Object, Object]]): Unit = {
+    val outputPipe = new OutputPipe(
+      "WikiStreamPipe",
+      sinks = List(
+        new JsonRddToEsSink(
+          name = "elasticsearch",
+          index = get[String](ES_OUTPUT_MAPPING, _.split("/")(0)),
+          mapping = get[String](ES_OUTPUT_MAPPING, _.split("/")(1)),
+          clusterName = get[String](ES_CLUSTER_NAME),
+          nodes = get[String](ES_SERVER_HOSTS).split(",").toList))
     )
 
-    pusher.start()
+    stream.map(_.message().toString).foreachRDD { rdd =>
+      outputPipe(rdd)
+      commit()
+    }
   }
 
-  def extractConf(prefixes:List[String]):Map[String,String] = {
-    val confs = prefixes.map { prefix =>
-      this
-        .conf
-        .filterKeys(_ startsWith prefix)
-        .map{ case (k,v) => (k.replaceFirst(prefix,""),v) }
-    }
-    if (confs.isEmpty) Map() else confs.reduce(_ ++ _)
-  }
+  override def run(): Unit = this.start()
 }
 
 object ElasticsearchPusher {
