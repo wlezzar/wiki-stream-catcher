@@ -9,6 +9,8 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka.{HasOffsetRanges, KafkaUtils, OffsetRange}
 
+import scala.util.{Failure, Success}
+
 /**
   * Created by wlezzar on 10/03/16.
   */
@@ -17,14 +19,19 @@ abstract class KafkaDirectStreamJob[K, V, KD <: Decoder[K], VD <: Decoder[V]](ss
                                                                               topic:String,
                                                                               offsetStore:OffsetStore)(implicit evidence$19 : scala.reflect.ClassTag[K], evidence$20 : scala.reflect.ClassTag[V], evidence$21 : scala.reflect.ClassTag[KD], evidence$22 : scala.reflect.ClassTag[VD]) extends Logging {
 
-  private val initialOffsets = offsetStore.restore().getOrElse(
-    Utils
-      .latestOffsets(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG),topic)
-      .map{case (partition,offset) => ((topic, partition), offset)}
-      .toMap
-  )
-
-  val offsetTracker = new OffsetTracker(initialOffsets)
+  val offsetTracker = {
+    val initialOffsets = offsetStore.restore().getOrElse(
+      Utils.latestOffsets(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG),topic) match {
+        case Success(offsets) => offsets
+          .map{case (partition,offset) => ((topic, partition), offset)}
+          .toMap
+        case Failure(e) => {
+          logError(s"Unable to fetch offsets from ${kafkaConfig(BOOTSTRAP_SERVERS_CONFIG)}")
+          throw e
+        }}
+    )
+    new OffsetTracker(initialOffsets)
+  }
 
   // Necessary to follow the offsets
   private var offsetRanges = Array[OffsetRange]()
@@ -34,7 +41,7 @@ abstract class KafkaDirectStreamJob[K, V, KD <: Decoder[K], VD <: Decoder[V]](ss
     val kafkaStream = KafkaUtils.createDirectStream[K, V, KD, VD, MessageAndMetadata[K, V]](
       ssc,
       kafkaConfig,
-      initialOffsets.map{case ((top, par),off) => (TopicAndPartition(top, par),off)},
+      offsetTracker.state().map{case ((top, par),off) => (TopicAndPartition(top, par),off)},
       (v:MessageAndMetadata[K, V]) => v // for now, we only the message
     )
 
@@ -59,7 +66,7 @@ abstract class KafkaDirectStreamJob[K, V, KD <: Decoder[K], VD <: Decoder[V]](ss
         offRange.untilOffset
       )}
     /* commit offsets */
-    offsetStore.save(offsetTracker.getState())
+    offsetStore.save(offsetTracker.state())
     logDebug(s"commited offsets :\n${offsetRanges.mkString("\n")}")
   }
 

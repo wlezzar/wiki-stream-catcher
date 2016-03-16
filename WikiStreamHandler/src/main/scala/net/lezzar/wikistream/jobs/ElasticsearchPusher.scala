@@ -1,9 +1,6 @@
 package net.lezzar.wikistream.jobs
 
-import java.util.Properties
-
 import io.confluent.kafka.serializers.KafkaAvroDecoder
-import kafka.common.TopicAndPartition
 import kafka.message.MessageAndMetadata
 import net.lezzar.wikistream.SparkJob
 import net.lezzar.wikistream.metrics.GlobalMetricRegistry
@@ -12,7 +9,6 @@ import net.lezzar.wikistream.output.sinks.JsonRddToEsSink
 import net.lezzar.wikistream.tools._
 import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
-import org.apache.spark.streaming.kafka.{HasOffsetRanges, OffsetRange, KafkaUtils}
 
 /**
   * Created by wlezzar on 20/02/16.

@@ -14,9 +14,9 @@ class OffsetTracker(initalState:Map[(String, Int),Long]) extends Logging {
 
   def updateState(topic:String, partition:Int, offset:Long) = internalState.put((topic,partition), offset)
 
-  def getState():Map[(String, Int), Long] = internalState.toMap
+  def state():Map[(String, Int), Long] = internalState.toMap
 
-  def getState(topic:String, partition:Int):Long = internalState.getOrElse((topic, partition),{
+  def state(topic:String, partition:Int):Long = internalState.getOrElse((topic, partition),{
       logError(s"Offset for topic '$topic' and partition '$partition' not found")
       0L
     })
