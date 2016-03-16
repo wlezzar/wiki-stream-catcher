@@ -1,4 +1,4 @@
-package net.lezzar.wikistream.jobs
+package net.lezzar.wikistream.jobs.utils
 
 import net.lezzar.wikistream.tools.Logging
 
