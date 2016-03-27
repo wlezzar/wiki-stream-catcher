@@ -1,7 +1,7 @@
 package net.lezzar.wikistream.output.sinks
 
 import io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient
-import net.lezzar.wikistream.clients.EsClientFactory
+import net.lezzar.wikistream.clients.EsClient
 import net.lezzar.wikistream.output.{RowOutputError, RowOutputStatus, RowOutputSuccess}
 import org.elasticsearch.client.Client
 import org.elasticsearch.client.transport.TransportClient
@@ -19,14 +19,17 @@ class JsonRddToEsSink(val name:String, index:String, mapping:String, esClient: =
            mapping:String,
            clusterName:String="elasticsearch",
            nodes:List[String]=List("localhost:9300")) =
-    this(name, index, mapping, EsClientFactory.create(clusterName, nodes).get)
-
-  //@transient lazy val client = esClient
+    this(
+      name,
+      index,
+      mapping,
+      EsClient.getOrCreateSingleton(s"default-$clusterName-$nodes",clusterName, nodes).get
+    )
 
   // The actual row processing
   override def process(row: String): RowOutputStatus = {
     val response = util.Try(
-      ElasticSingleton.client
+      esClient
         .prepareIndex(index, mapping)
         .setSource(row)
         .get()
@@ -38,8 +41,4 @@ class JsonRddToEsSink(val name:String, index:String, mapping:String, esClient: =
     }
   }
 
-}
-
-object ElasticSingleton {
-  val client = EsClientFactory.create("lezzar-cluster").get
 }
