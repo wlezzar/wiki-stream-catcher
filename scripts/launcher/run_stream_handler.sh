@@ -5,7 +5,7 @@ source $BASENAME/env.sh
 
 $SPARK_BIN/spark-submit --class net.lezzar.wikistream.jobs.ElasticsearchPusher \
   --master local[*] \
-  $PROJECT_HOME/WikiStreamHandler/target/WikiStreamHandler-1.0-SNAPSHOT.jar \
+  $PROJECT_HOME/wiki_stream_handler/target/WikiStreamHandler-1.0-SNAPSHOT.jar \
   "kafka.clients.global.bootstrap.servers=localhost:9092" \
   "kafka.clients.global.schema.registry.url=http://localhost:8081" \
   "kafka.clients.global.specific.avro.reader=false" \
