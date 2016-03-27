@@ -24,16 +24,23 @@ abstract class KafkaDirectStream[K, V, KD <: Decoder[K], VD <: Decoder[V]](impli
   def offsetStore:OffsetStore
 
   lazy val offsetTracker = {
-    val initialOffsets = offsetStore.restore().getOrElse(
-      Utils.latestOffsets(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG),topic) match {
-        case Success(offsets) => offsets
-          .map{case (partition,offset) => ((topic, partition), offset)}
-          .toMap
-        case Failure(e) => {
-          logError(s"Unable to fetch offsets from ${kafkaConfig(BOOTSTRAP_SERVERS_CONFIG)}")
-          throw e
-        }}
-    )
+    val latestOffsets = Utils.latestOffsets(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG),topic) match {
+      case Success(offsets) => offsets
+        .map{case (partition,offset) => ((topic, partition), offset)}
+        .toMap
+      case Failure(e) => {
+        logError(s"Unable to fetch offsets from ${kafkaConfig(BOOTSTRAP_SERVERS_CONFIG)}")
+        throw e
+      }}
+
+    val initialOffsets = offsetStore.restore() match {
+      case None => latestOffsets
+      case Some(storedOffsets) => latestOffsets.map{ x =>
+        val (topicAndPartition, offset) = x
+        (topicAndPartition,Math.min(offset, storedOffsets.getOrElse(topicAndPartition,0L)))
+      }
+    }
+
     new OffsetTracker(initialOffsets)
   }
 
@@ -59,7 +66,6 @@ abstract class KafkaDirectStream[K, V, KD <: Decoder[K], VD <: Decoder[V]](impli
     )
 
     process(stream)
-
 
     ssc.start()
     ssc.awaitTermination()
