@@ -3,7 +3,7 @@ echo $BASENAME
 
 source $BASENAME/env.sh
 
-$SPARK_BIN/spark-submit --class net.lezzar.wikistream.jobs.ElasticsearchPusher \
+$SPARK_BIN/spark-submit --class net.lezzar.wikistream.jobs.streaming.ElasticsearchPusher \
   --master local[*] \
   $PROJECT_HOME/wiki_stream_handler/target/WikiStreamHandler-1.0-SNAPSHOT.jar \
   "kafka.clients.global.bootstrap.servers=localhost:9092" \
