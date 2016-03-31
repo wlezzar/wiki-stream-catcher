@@ -27,7 +27,7 @@ class OffsetTracker(initalState:Map[(String, Int),Long]) extends Logging {
 
 object OffsetTracker extends Logging {
 
-  private def fetchOffsets(brokers:String, topics:Set[String], time:Long) = Utils.latestOffsets(brokers,topics) match {
+  private def fetchOffsets(brokers:String, topics:Set[String], time:Long) = Utils.offsetRequest(brokers,topics,time) match {
     case Success(offsets) => offsets
     case Failure(e) => {
       logError(s"Unable to fetch offsets from $brokers for topics $topics")
@@ -35,8 +35,8 @@ object OffsetTracker extends Logging {
     }}
 
   def apply(brokers:String, topics:Set[String]):OffsetTracker = {
-    val latestOffsets = fetchOffsets(brokers, topics, LatestTime)
-    new OffsetTracker(latestOffsets)
+    val offsets = fetchOffsets(brokers, topics, EarliestTime)
+    new OffsetTracker(offsets)
   }
 
   def apply(brokers:String, topics:Set[String], initialOffsets:Map[(String,Int),Long]) = {
