@@ -1,9 +1,9 @@
-package net.lezzar.wikistream.jobs
+package net.lezzar.wikistream.jobs.streaming
 
 import io.confluent.kafka.serializers.KafkaAvroDecoder
 import kafka.message.MessageAndMetadata
+import net.lezzar.wikistream.jobs._
 import net.lezzar.wikistream.kafka.streaming.KafkaDirectStream
-import net.lezzar.wikistream.metrics.GlobalMetricRegistry
 import net.lezzar.wikistream.output.OutputPipe
 import net.lezzar.wikistream.output.sinks.JsonRddToEsSink
 import net.lezzar.wikistream.tools._
@@ -37,18 +37,18 @@ class ElasticsearchPusher(val ssc:StreamingContext, val conf:Map[String,String])
 
   override val offsetStore: OffsetStore = new FileSystemOffsetStore(get(OFFSET_STORE_PATH))
 
-  override val topic: String = get(STREAM_SOURCE_TOPICS)
+  override val topics: Set[String] = get[String](STREAM_SOURCE_TOPICS).split(",").toSet
 
   override def process(stream: DStream[MessageAndMetadata[Object, Object]]): Unit = {
     val outputPipe = new OutputPipe(
-      "WikiStreamPipe",
+      name  = "WikiStreamPipe",
       sinks = List(
         new JsonRddToEsSink(
-          name = "elasticsearch",
-          index = get[String](ES_OUTPUT_MAPPING, _.split("/")(0)),
-          mapping = get[String](ES_OUTPUT_MAPPING, _.split("/")(1)),
+          name        = "elasticsearch.sink",
+          index       = get[String](ES_OUTPUT_MAPPING, _.split("/")(0)),
+          mapping     = get[String](ES_OUTPUT_MAPPING, _.split("/")(1)),
           clusterName = get[String](ES_CLUSTER_NAME),
-          nodes = get[String](ES_SERVER_HOSTS).split(",").toList))
+          nodes       = get[String](ES_SERVER_HOSTS).split(",").toList))
     )
 
     stream.map(_.message().toString).foreachRDD { rdd =>

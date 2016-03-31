@@ -10,8 +10,6 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream.DStream
 import org.apache.spark.streaming.kafka.{HasOffsetRanges, KafkaUtils, OffsetRange}
 
-import scala.util.{Failure, Success}
-
 /**
   * Created by wlezzar on 10/03/16.
   */
@@ -20,28 +18,12 @@ abstract class KafkaDirectStream[K, V, KD <: Decoder[K], VD <: Decoder[V]](impli
   def name:String
   def ssc:StreamingContext
   def kafkaConfig: Map[String,String]
-  def topic:String
+  def topics:Set[String]
   def offsetStore:OffsetStore
 
-  lazy val offsetTracker = {
-    val latestOffsets = Utils.latestOffsets(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG),topic) match {
-      case Success(offsets) => offsets
-        .map{case (partition,offset) => ((topic, partition), offset)}
-        .toMap
-      case Failure(e) => {
-        logError(s"Unable to fetch offsets from ${kafkaConfig(BOOTSTRAP_SERVERS_CONFIG)}")
-        throw e
-      }}
-
-    val initialOffsets = offsetStore.restore() match {
-      case None => latestOffsets
-      case Some(storedOffsets) => latestOffsets.map{ x =>
-        val (topicAndPartition, offset) = x
-        (topicAndPartition,Math.min(offset, storedOffsets.getOrElse(topicAndPartition,0L)))
-      }
-    }
-
-    new OffsetTracker(initialOffsets)
+  lazy val offsetTracker = offsetStore.restore() match {
+    case None => OffsetTracker(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG), topics)
+    case Some(storedOffsets) => OffsetTracker(kafkaConfig(BOOTSTRAP_SERVERS_CONFIG), topics, storedOffsets)
   }
 
   // Necessary to follow the offsets
