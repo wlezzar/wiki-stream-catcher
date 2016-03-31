@@ -14,12 +14,15 @@ trait Configurable extends Logging {
   val requiredParams:Set[String]
   val optionalParams:Set[String]
 
-  protected def get[T](key:String, thenApply:(String=>T) = (x:String) => x.asInstanceOf[T],default:T=null):T = {
-    if (default != null || conf.contains(key)) thenApply(conf.getOrElse(key,default.toString))
-    else throw new IllegalArgumentException(s"Key '$key' not found in the configuration map ($conf)")
+  def get[T](key:String, thenApply:(String=>T) = (x:String) => x.asInstanceOf[T], default:Option[T]=None):T = {
+    (this.conf.get(key), default) match {
+      case (Some(element), _) => thenApply(element)
+      case (None, Some(element)) => element
+      case _ => throw new IllegalArgumentException(s"Key '$key' not found in the configuration map ($conf)")
+    }
   }
 
-  protected def assertValidConf() = {
+  def assertValidConf() = {
     val givenParams = conf.keySet
 
     requiredParams -- givenParams match {
