@@ -10,9 +10,9 @@ class OffsetTrackerMetricSource(val sourceName:String, offsetTracker: OffsetTrac
 
   override val metricRegistry: MetricRegistry = new MetricRegistry()
 
-  offsetTracker.getState.foreach{
+  offsetTracker.state.foreach{
     case ((topic,partition),_) => metricRegistry.register(s"$topic.$partition", new Gauge[Long] {
-      override def getValue: Long = offsetTracker.getState(topic,partition)
+      override def getValue: Long = offsetTracker.state(topic,partition)
     })
   }
 

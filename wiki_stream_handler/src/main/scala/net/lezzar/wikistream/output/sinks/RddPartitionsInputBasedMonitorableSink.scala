@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory
 /**
   * Created by wlezzar on 20/02/16.
   */
-abstract class RddPartitionsInputBasedMonitorableSink[T] extends Sink[RDD[T]] {
+abstract class RddPartitionsInputBasedMonitorableSink[T] extends Sink[RDD[T]] with Serializable {
 
   // The actual row processing
   def process(partition:Iterator[T]):Iterator[(T, RowOutputStatus)]

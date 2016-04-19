@@ -3,6 +3,6 @@ echo $BASENAME
 
 source $BASENAME/env.sh
 
-cd $PROJECT_HOME/WikiStreamHandler
+cd $PROJECT_HOME/wiki_stream_handler
 mvn clean package
 cd -

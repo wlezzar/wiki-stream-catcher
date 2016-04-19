@@ -12,4 +12,7 @@ object KafkaProducerFactory {
   def create[K, V](conf:Properties, kSer:Serializer[K], vSer:Serializer[V]):Producer[K,V] = {
     new KafkaProducer[K,V](conf, kSer, vSer)
   }
+  def create[K, V](conf:Properties):Producer[K,V] = {
+    new KafkaProducer[K,V](conf)
+  }
 }
